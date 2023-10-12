@@ -133,7 +133,12 @@ assign f = sel[0] ? a : (sel[1] ? b : (sel[2] ? c : d)) ;
 
 **Vectors**
 + Arithmetic operations operate on vectors as binary numbers.
-+  On line 16, in place of `//..` , type `$out[4:0] = $in1[3:0] + $in2[3:0];`
++  On line 16, in place of `//..` , type
+
+ ```v
+  $out[4:0] = $in1[3:0] + $in2[3:0];
+```
+
 +  `$out[4:0]` creates a vecot of 5 bits.
 
 <p align="center">
@@ -177,20 +182,19 @@ assign f = sel[0] ? a : (sel[1] ? b : (sel[2] ? c : d)) ;
 </p>
 
 ```v
+$reset = *reset;
 $val1[31:0] = $rand1[3:0];
 $val2[31:0] = $rand2[3:0];
 $sum[31:0] = $val1[31:0] + $val2[31:0];
 $diff[31:0] = $val1[31:0] - $val2[31:0];
 $prod[31:0] = $val1[31:0] * $val2[31:0];
 $quot[31:0] = $val1[31:0] / $val2[31:0];
-$out[31:0] = $op1 ? $sum[31:0] :
-             $op2 ? $diff[31:0] :
-             $op3 ? $prod[31:0] :
-                    $quot[31:0];
+$out[31:0] = $op[1] ? ($op[0] ? $quot : $prod)
+                    : ($op[0] ? $diff : $sum);
 ```
 
 <p align="center">
-<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/055baa4e-f055-464a-bcd7-a8899db389b3">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/b085c8d7-b712-4625-80bf-c9d2bbdc93c0">
 </p>
 <p align="center">
   Fig 12.
@@ -283,27 +287,149 @@ Fig 4.
 </p>
 
 + ```v
-   $val2[31:0] = $rand2[3:0];
-   
-   $val1[31:0] = $reset ? 32'b0 : >>1$out[31:0];
+   $reset = *reset;
+   $val2[31:0] = $rand2[3:0]; 
+   $val1[31:0] = >>1$out[31:0];
    $sum[31:0] = $val1[31:0] + $val2[31:0];
    $diff[31:0] = $val1[31:0] - $val2[31:0];
    $prod[31:0] = $val1[31:0] * $val2[31:0];
    $quot[31:0] = $val1[31:0] / $val2[31:0];
-   
    $out[31:0] = $reset ? 32'b0 :
-                $op1 ? $sum[31:0] : 
-                $op2 ? $diff[31:0] : 
-                $op3 ? $prod[31:0] : 
-                       $quot[31:0];
+                ($op[1] ? ($op[0] ? $quot : $prod)
+                        : ($op[0]? $diff : $sum));
   ```
 
 <p align="center">
-<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/1ba8b1f7-7498-4a1a-8eaa-50f27b3311c5">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/5576c9d8-d46e-407a-8473-b2027fe06cee">
+</p>
+<p align="center">
+  Fig 8.
+</p>
+
+<p align="center">
+<img width="540" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/e2b63305-29bf-41a6-8073-3ac5b504f684">
+</p>
+<p align="center">
+  Fig 9.
+</p>
+
+</details>
+
+## Pipelined Logic
+<details>
+<summary> Introduction </summary>
+
+**Pythagoras's Theorem**
+
+<p align="center">
+  <img width="151" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/72828588-2914-46a1-9cc6-22e36ab47151">
+</p>
+<p align="center">
+  Fig 1.
+</p>
+
++ Computation cannot be done in a single cycle, hence we distribute the calculation over 3 cycles.
+<p align="center">
+  <img width="298" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/d03e696c-fd46-446b-9c44-995806260706">
+</p>
+<p align="center">
+  Fig 2.
+</p>
+
++ TL Verilog gives us the ability to model this in what we called as **timing abstract** representation.
+<p align="center">
+<img width="284" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/33ed466c-9a22-4411-bb0b-eb6761cc1157">
+</p>
+<p align="center">
+  Fig 3.
+</p>
+
+```v
+|calc
+         @1
+            $aa_sq[7:0] = $aa[3:0] ** 2;
+            $bb_sq[7:0] = $bb[3:0] ** 2;
+         @2
+            $cc_sq[8:0] = $aa_sq + $bb_sq;
+         @3
+            $cc[4:0] = sqrt($cc_sq);
+```
+
+**Retiming**
+```v
+|calc
+         @0
+            $aa_sq[7:0] = $aa[3:0] ** 2;
+         @1 
+            $bb_sq[7:0] = $bb[3:0] ** 2;
+         @2
+            $cc_sq[8:0] = $aa_sq + $bb_sq;
+         @4
+            $cc[4:0] = sqrt($cc_sq);
+```
+<p align="center">
+  <img width="332" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/3f1d17b0-8ba2-44aa-a4b1-80e2c32e19b3">
+</p>
+<p align="center">
+  Fig 4.
+</p>
+
++ There will be no impact on behavior.
+
+<p align="center">
+  <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/f4c22366-262d-4241-8dec-c428dc4d974d">
+</p>
+<p align="center">
+  Fig 5. Without pipeline
+</p>
+
+<p align="center">
+  <img width="959" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/4a53fc38-ab04-4ea0-a3d5-3e74f20bc601">
+</p>
+<p align="center">
+  Fig 6. With pipeline
+</p>
+
+**Identifiers and Types**
++ Type of an identifier determined by symbol prefix and case/delimitation style.
+<p align="center">
+  <img width="158" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/8d4d6c1f-a82a-4ef5-adf8-1b40f7bad737">
+</p>
+<p align="center">
+  Fig 7.
+</p>
+
++ First token must start with two alpha characters.
+  - $lower_case : pipe signal
+  - $CamelCase : state signal ( Pascal case)
+  - $UPPER_CASE : keyword signal
++ Numbers end tokens (after alphas)
+  - $base64_value : good
+  - $bad_value_5 : bad
++ Numeric identifiers
+  - `>>1` : ahead by 1
+
+</details>
+
+<details>
+<summary> Labs </summary> 
+
++ Example
+  ```v
+  |comp
+      
+      @1
+         $err1 = $bad_input || $illegal_op;
+      @3
+         $err2 = $err1 || $over_flow;
+      @6
+         $err3 = $div_by_zero || $err2;
+  ```
+<p align="center">
+  <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/3f3cdbc3-39f3-4cf4-aab8-927b48c39cca">
 </p>
 <p align="center">
   Fig 8.
 </p>
 
 </details>
-
