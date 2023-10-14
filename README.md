@@ -432,4 +432,232 @@ Fig 4.
   Fig 8.
 </p>
 
++ Counter and Calculator in pipeline
+
+<p align="center">
+  <img width="298" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/96837410-4d83-44f5-86c2-f9ceecfc6568">
+</p>
+<p align="center">
+  Fig 9.
+</p>
+
+```v
+|calc
+      @0
+         $reset = *reset;
+      @1
+         $val2[31:0] = $rand2[3:0];
+         $val1[31:0] = (>>1$out[31:0]);
+         $sum[31:0] = $val1[31:0] + $val2[31:0];
+         $diff[31:0] = $val1[31:0] - $val2[31:0];
+         $prod[31:0] = $val1[31:0] * $val2[31:0];
+         $quot[31:0] = $val1[31:0] / $val2[31:0];
+         $out[31:0] = $reset ? 32'b0 :
+                      ($op[1] ? ($op[0] ? $quot : $prod)
+                              : ($op[0]? $diff : $sum));
+         $cnt[31:0] = $reset ? 0 : (1 + >>1$cnt);
+```
+
+<p align="center">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/8e2a534d-fe0d-43a6-97b6-139bc5a41504">
+<img width="503" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/1d0f1af7-8ae3-4986-85f1-43b0c19bb772">
+</p>
+<p align="center">
+  Fig 10.
+</p>
+
++ 2-Cycle Calculator
+<p align="center">
+  <img width="292" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/52da0bab-1d7d-4264-af5a-481c00d26757">
+</p>
+<p align="center">
+  Fig 11.
+</p>
+
+```v
+|calc 
+      @0
+         $reset = *reset;
+      @1  
+         $val1[31:0] = (>>2$out[31:0]);
+         $val2[31:0] = $rand2[3:0];
+         $sum[31:0] = $val1[31:0] + $val2[31:0];
+         $diff[31:0] = $val1[31:0] - $val2[31:0];
+         $prod[31:0] = $val1[31:0] * $val2[31:0];
+         $quot[31:0] = $val1[31:0] / $val2[31:0];
+         $cnt[0] = $reset ? 0 : (1 + >>1$cnt);
+      @2
+         $valid[0] = $cnt;
+         $rst = ~$valid[0] || $reset;
+         $out[31:0] = $rst ? 32'b0 :
+                      ($op[1] ? ($op[0] ? $quot : $prod)
+                              : ($op[0]? $diff : $sum));
+```
+<p align="center">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/4b2c78b6-a08b-4195-9bf5-c1ec1799d531">
+<img width="476" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/968dc248-1c0c-4d45-a990-32023ff2ab15">
+</p>
+<p align="center">
+  Fig 12.
+</p>
+
+</details>
+
+## Validity
+<details>
+<summary> Introduction </summary> 
+
++ Validity provides:
+  - Easier debug
+  - Cleaner design
+  - Better error checking
+  - Automated clock gating
+ 
++ Clock gating
+  - Clock signals are distributed to every flip flop. CLocks toggle twice per cycle, which consumes power.
+  - CLock gating avoids toggling clock signals.
+  - TL-verilog can produce fine-grained gating (or enables).
+  
+</details>
+
+<details>
+<summary> Labs </summary>  
+
++ Distance accumulator
+
+<p align="center">
+<img width="341" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/6268ea4f-02f4-44ea-ad0a-00c3bcc10221">
+</p>
+<p align="center">
+  Fig 1.
+</p>
+
+```v
+|calc
+      @1
+         $reset = *reset;
+      ?$valid
+         @1
+            $aa_sq[31:0] = $aa[3:0] ** 2;
+            $bb_sq[31:0] = $bb[3:0] ** 2;
+         @2
+            $cc_sq[31:0] = $aa_sq + $bb_sq;
+         @3
+            $cc[31:0] = sqrt($cc_sq);
+      @4
+         $tot_dist[63:0] = 
+                   $reset ? '0 :
+                   $valid ? >>1$tot_dist + $cc :
+                            >>1$tot_dist;
+```
+
+<p align="center">
+  <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/7c034523-0164-4d80-808c-a59ae8218355">
+</p>
+<p align="center">
+  Fig 2.
+</p>
+
++ 2-Cycle Calculator with Validity
+
+<p align="center">
+  <img width="297" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/4fafe266-cf7c-4bc9-bf16-c145fcc662b2">
+</p>
+<p align="center">
+  Fig 3.
+</p>
+
+```v
+|calc
+      @0
+         $reset = *reset;
+      @1
+         $valid = $reset ? 1'b0 : >>1$valid + 1'b1;
+         $val2[31:0] = $rand2[3:0];
+         $val1[31:0] = >>2$out;
+         $reset_or_valid = $valid || $reset;
+      ?$reset_or_valid
+         @1
+            $sum[31:0] = $val1[31:0] + $val2[31:0];
+            $diff[31:0] = $val1[31:0] - $val2[31:0];
+            $prod[31:0] = $val1[31:0] * $val2[31:0];
+            $quot[31:0] = $val1[31:0] / $val2[31:0];
+         @2 
+            $out[31:0] = $reset ? 32'b0 : 
+                        ($op[1:0] == 2'b00) ? $sum :
+                        ($op[1:0] == 2'b01) ? $diff :
+                        ($op[1:0] == 2'b10) ? $prod : $quot;
+```
+
+<p align="center">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/0c30ee22-4022-4725-a2ba-7847ce71472c">
+<img width="467" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/8fff90a0-b32b-4c34-b747-0b32ce62f960">
+</p>
+<p align="center">
+Fig 4.
+</p>
+
++ Calculator with Single-Value Memory
+
+<p align="center">
+  <img width="323" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/81bbd477-b907-40f9-8d03-4582c8c7459f">
+</p>
+<p align="center">
+  Fig 5.
+</p>
+
+```v
+ |calc
+      @0
+         $reset = *reset;
+      @1
+         $valid = $reset ? 1'b0 : >>1$valid + 1'b1;
+         $val2[31:0] = $rand2[3:0];
+         $val1[31:0] = >>2$out;
+         $reset_or_valid = $valid || $reset;
+      ?$reset_or_valid
+         @1
+            $sum[31:0] = $val1[31:0] + $val2[31:0];
+            $diff[31:0] = $val1[31:0] - $val2[31:0];
+            $prod[31:0] = $val1[31:0] * $val2[31:0];
+            $quot[31:0] = $val1[31:0] / $val2[31:0];
+         @2 
+            $mem[31:0] = $reset ? 32'b0 : 
+                         ($op[2:0] == 3'b101) ? $val1 :
+                                              >>2$mem;
+            $out[31:0] = $reset ? 32'b0 : 
+                        ($op[2:0] == 3'b000) ? $sum :
+                        ($op[2:0] == 3'b001) ? $diff :
+                        ($op[2:0] == 3'b010) ? $prod : 
+                        ($op[2:0] == 3'b011) ? $quot : 
+                        ($op[2:0] == 3'b100) ? >>2$mem : >>2$out;
+```
+
+<p align="center">
+  <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/15830909-4bc3-425a-bf54-2b135b3d406e">
+  <img width="536" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/45d73266-2ee3-4603-b061-98c784b6e0c5">
+</p>
+<p align="center">
+  Fig 6.
+</p>
+
+</details>
+
+<details>
+<summary> Hierarchy </summary>
+
+<p align="center">
+  <img width="381" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/3154b7a2-b8f3-4173-98f3-f06db688fc1e">
+</p>
+<p align="center">
+  Fig 7.
+</p>
+
+<p align="center">
+  <img width="959" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/8af0e2ff-58fd-443a-bb89-5c245cf057ff">
+</p>
+<p align="center">
+  Fig 8.
+</p>
+
 </details>
