@@ -1,4 +1,4 @@
-# RISCV_based_myth
+# Building a RISCV Core
 # TABLE OF CONTENTS
 ## DAY 1
 **Digital Logic with TL-Verilog and Makerchip**  
@@ -590,8 +590,8 @@ Fig 4.
 ```
 
 <p align="center">
-<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/0c30ee22-4022-4725-a2ba-7847ce71472c">
-<img width="467" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/8fff90a0-b32b-4c34-b747-0b32ce62f960">
+<img width="956" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/442cb8a9-6c62-4c0b-a27a-f367b3ecff19">
+<img width="830" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/5eb1d3ca-ca0d-4563-af38-dc2a02bc587f">
 </p>
 <p align="center">
 Fig 4.
@@ -634,8 +634,8 @@ Fig 4.
 ```
 
 <p align="center">
-  <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/15830909-4bc3-425a-bf54-2b135b3d406e">
-  <img width="536" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/45d73266-2ee3-4603-b061-98c784b6e0c5">
+<img width="959" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/7d5e4605-d058-45e6-82d1-15f8565c29f2">
+<img width="785" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/d2827a11-216d-4e3e-a376-ca69b265b5a1">
 </p>
 <p align="center">
   Fig 6.
@@ -655,6 +655,270 @@ Fig 4.
 
 <p align="center">
   <img width="959" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/8af0e2ff-58fd-443a-bb89-5c245cf057ff">
+</p>
+<p align="center">
+  Fig 8.
+</p>
+
+</details>
+
+# Day-2
+## Introduction
+<details>
+<summary> Micro-architecture of Single Cycle RISC-V CPU </summary>
+
+</details>
+
+## Fetch and Decode
+<details>
+<summary> Implementation Plan </summary> 
+
+<p align="center">
+<img width="436" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/641526e6-4ccd-4dd9-ba7a-c61c4aeab0cc">
+</p>
+<p align="center">
+  Fig 1.
+</p>
+
+</details>
+
+<details>
+<summary> Labs </summary>
+
++ Lab for PC
+
+```v
+|cpu
+      @0
+         $reset = *reset;
+         $pc[31:0] = >>1$reset ? 32'b0 :
+                                 >>1$pc + 32'd4;
+```
+
+<p align="center">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/4bcc36c3-6b4f-475d-8ef9-0970dd2e949c">
+</p>
+<p align="center">
+  Fig 2.
+</p>
+
++ Lab for Insstruction Fetch Logic
+
+```v
+|cpu
+      @0
+         $reset = *reset;
+         $pc[31:0] = >>1$reset ? 32'b0 :
+                                 >>1$pc + 32'd4;
+         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
+         $imem_rd_en = !$reset;
+      /imem[7:0]
+         @1
+            $instr[31:0] = *instrs\[#imem\];
+      ?$imem_rd_en
+         @1
+            $imem_rd_data[31:0] = /imem[$imem_rd_addr]$instr;
+      @1   
+         $instr[31:0] = $imem_rd_data[31:0];
+```
+
+<p align="center">
+<img width="959" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/60641804-d2f2-44dc-91b3-5e48aaea6b56">
+  <img width="939" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/8dec92ae-607d-4b1a-92e1-dc256d8b61dc">
+</p>
+<p align="center">
+  Fig 3.
+</p>
+
++ Lab for Instruction Decode
+
+<p align="center">
+  <img width="515" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/3382ad8a-c171-4511-acfc-750e92559fef">
+  <img width="465" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/1e7308f0-6ceb-4b9f-ad61-f43fe0893259">
+  <img width="457" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/4fee566e-2884-4286-bcb6-cf79db7b16f0">
+</p>
+<p align="center">
+  Fig 4.
+</p>
+
+```v
+|cpu
+      @0
+         $reset = *reset;
+         $pc[31:0] = >>1$reset ? 32'b0 :
+                                 >>1$pc + 32'd4;
+         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
+         $imem_rd_en = !$reset;
+      /imem[7:0]
+         @1
+            $instr[31:0] = *instrs\[#imem\];
+      ?$imem_rd_en
+         @1
+            $imem_rd_data[31:0] = /imem[$imem_rd_addr]$instr;
+      @1   
+         $instr[31:0] = $imem_rd_data[31:0];
+         $is_b_instr = $instr[6:2] ==? 5'b11000;
+         $is_r_instr = $instr[6:2] ==? 5'b01011 ||
+                          $instr[6:2] ==? 5'b011x0 ||
+                          $instr[6:2] ==? 5'b10100;
+         $is_j_instr = $instr[6:2] ==? 5'b11011;
+         $is_i_instr = $instr[6:2] ==? 5'b0000x ||
+                            $instr[6:2] ==? 5'b001x0 ||
+                            $instr[6:2] ==? 5'b11001;
+         $is_u_instr = $instr[6:2] ==? 5'b0x101;
+         $is_s_instr = $instr[6:2] ==? 5'b0100x;
+         $rs1[4:0] = $instr[19:15];
+         $rs2[4:0] = $instr[24:20];
+         $rd[4:0] = $instr[11:7];
+         $opcode[6:0] = $instr[6:0];
+         $funct7[6:0] = $instr[31:25];
+         $funct3[2:0] = $instr[14:12];
+         $imm[31:0] = $is_i_instr ? {{21{$instr[31]}}, $instr[30:20]} :
+                         $is_s_instr ? {{21{$instr[31]}}, $instr[30:25], $instr[11:7]} :
+                         $is_b_instr ? {{20{$instr[31]}}, $instr[7], $instr[30:25], $instr[11:8], 1'b0} :
+                         $is_u_instr ? {$instr[31:12], 12'b0} :
+                         $is_j_instr ? {{12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0} :
+                                     32'b0;
+```
+<p align="center">
+  <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/c2759d98-9eee-457e-8114-6b7fbf1079a6">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/03f41240-b9c3-4235-ac98-8a1fea97e651">
+</p>
+<p align="center">
+  Fig 5.
+</p>
+
++ Lab for Instruction Decode with Validity
+
+```v
+|cpu
+      @0
+         $reset = *reset;
+         $pc[31:0] = >>1$reset ? 32'b0 :
+                                 >>1$pc + 32'd4;
+         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
+         $imem_rd_en = !$reset;
+      /imem[7:0]
+         @1
+            $instr[31:0] = *instrs\[#imem\];
+      ?$imem_rd_en
+         @1
+            $imem_rd_data[31:0] = /imem[$imem_rd_addr]$instr;
+      @1   
+         $instr[31:0] = $imem_rd_data[31:0];
+         $is_b_instr = $instr[6:2] ==? 5'b11000;
+         $is_r_instr = $instr[6:2] ==? 5'b01011 ||
+                          $instr[6:2] ==? 5'b011x0 ||
+                          $instr[6:2] ==? 5'b10100;
+         $is_j_instr = $instr[6:2] ==? 5'b11011;
+         $is_i_instr = $instr[6:2] ==? 5'b0000x ||
+                            $instr[6:2] ==? 5'b001x0 ||
+                            $instr[6:2] ==? 5'b11001;
+         $is_u_instr = $instr[6:2] ==? 5'b0x101;
+         $is_s_instr = $instr[6:2] ==? 5'b0100x;
+         $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
+         $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
+         $funct3_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         $funct7_valid = $is_r_instr;
+         $imm[31:0] = $is_i_instr ? {{21{$instr[31]}}, $instr[30:20]} :
+                         $is_s_instr ? {{21{$instr[31]}}, $instr[30:25], $instr[11:7]} :
+                         $is_b_instr ? {{20{$instr[31]}}, $instr[7], $instr[30:25], $instr[11:8], 1'b0} :
+                         $is_u_instr ? {$instr[31:12], 12'b0} :
+                         $is_j_instr ? {{12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0} :
+                                     32'b0;
+         ?$rs1_valid
+            $rs1[4:0] = $instr[19:15];
+         ?$rs2_valid
+            $rs2[4:0] = $instr[24:20];
+         ?$rd_valid
+            $rd[4:0] = $instr[11:7];
+         ?$funct3_valid
+            $funct3[2:0] = $instr[14:12];
+         ?$funct7_valid
+            $funct7[6:0] = $instr[31:25];
+         $opcode[6:0] = $instr[6:0];
+```
+
+<p align="center">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/e3d00438-2e4e-4062-84f7-d35c8211708c">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/00b680d8-58de-4695-b31e-04f293ee9185">
+</p>
+<p align="center">
+  Fig 6.
+</p>
+
++ Lab to Decode Individual Instruction
+
+<p align="center">
+  <img width="328" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/9ac885b0-78de-4cd0-a46a-3a1c77a378ce">
+</p>
+<p align="center">
+  Fig 7.
+</p>
+
+```v
+|cpu
+      @0
+         $reset = *reset;
+         $pc[31:0] = >>1$reset ? 32'b0 :
+                                 >>1$pc + 32'd4;
+         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
+         $imem_rd_en = !$reset;
+      /imem[7:0]
+         @1
+            $instr[31:0] = *instrs\[#imem\];
+      ?$imem_rd_en
+         @1
+            $imem_rd_data[31:0] = /imem[$imem_rd_addr]$instr;
+      @1   
+         $instr[31:0] = $imem_rd_data[31:0];
+         $is_b_instr = $instr[6:2] ==? 5'b11000;
+         $is_r_instr = $instr[6:2] ==? 5'b01011 ||
+                          $instr[6:2] ==? 5'b011x0 ||
+                          $instr[6:2] ==? 5'b10100;
+         $is_j_instr = $instr[6:2] ==? 5'b11011;
+         $is_i_instr = $instr[6:2] ==? 5'b0000x ||
+                            $instr[6:2] ==? 5'b001x0 ||
+                            $instr[6:2] ==? 5'b11001;
+         $is_u_instr = $instr[6:2] ==? 5'b0x101;
+         $is_s_instr = $instr[6:2] ==? 5'b0100x;
+         $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
+         $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
+         $funct3_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         $funct7_valid = $is_r_instr;
+         $imm[31:0] = $is_i_instr ? {{21{$instr[31]}}, $instr[30:20]} :
+                         $is_s_instr ? {{21{$instr[31]}}, $instr[30:25], $instr[11:7]} :
+                         $is_b_instr ? {{20{$instr[31]}}, $instr[7], $instr[30:25], $instr[11:8], 1'b0} :
+                         $is_u_instr ? {$instr[31:12], 12'b0} :
+                         $is_j_instr ? {{12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0} :
+                                     32'b0;
+         ?$rs1_valid
+            $rs1[4:0] = $instr[19:15];
+         ?$rs2_valid
+            $rs2[4:0] = $instr[24:20];
+         ?$rd_valid
+            $rd[4:0] = $instr[11:7];
+         ?$funct3_valid
+            $funct3[2:0] = $instr[14:12];
+         ?$funct7_valid
+            $funct7[6:0] = $instr[31:25];
+         $opcode[6:0] = $instr[6:0];         
+         $dec_bits[10:0] = {$funct7[5], $funct3, $opcode};
+         $is_bne = $dec_bits ==? 11'bx_001_1100011;
+         $is_bltu = $dec_bits ==? 11'bx_110_1100011;
+         $is_blt = $dec_bits ==? 11'bx_100_1100011;
+         $is_bgeu = $dec_bits ==? 11'bx_111_1100011;
+         $is_bge = $dec_bits ==? 11'bx_101_1100011;
+         $is_beq = $dec_bits ==? 11'bx_000_1100011;
+         $is_addi = $dec_bits ==? 11'bx_000_0010011;
+         $is_add = $dec_bits ==? 11'b0_000_0110011;
+```
+
+<p align="center">
+  <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/803be52a-1ea9-4070-8ddd-027344e2ca13">
+  <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/718c8298-3bba-4f35-846d-d30e820ac344">
 </p>
 <p align="center">
   Fig 8.
