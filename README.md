@@ -1,23 +1,27 @@
 # Building a RISCV Core
+The RISC-V CPU Core has been designed with the help of Transaction Level Verilog(TL-Verilog) in addition with the Makerchip IDE Platform. 
+# TL-Verilog
+Transaction-Level Verilog (TL-Verilog) is an emerging extension to SystemVerilog that supports a new design methodology, called transaction-level design. For this project, TL-Verilog has been chosed as the HDL of choice for the design. Projects on Makerchip can be completely designed using TL-Verilog. Transaction Level Verilog standard is an extension of Verilog which has various advantages like simpler syntax, shorter codes and easy pipelining. Tha main advantage of TL-Verilog over System Verilog is the amount of code reduction in designing even a simple model.
 # TABLE OF CONTENTS
-## DAY 1
+## DAY 3
 **Digital Logic with TL-Verilog and Makerchip**  
 + [Combinational Logic in TL-Verilog using Makerchip](#combinational-logic-in-tl-verilog-using-makerchip)
 + [Sequential Logic](#sequential-logic)
 + [Pipelined Logic](#pipelined-logic)
 + [Validity](#validity)
 
-## DAY 2
+## DAY 4
 **Basic RISC-V CPU Microarchitecture**
 + [Introduction](#introduction)
 + [Fetch and Decode](#fetch-and-decode)
 + [RISC-V Control Logic](#risc-v-control-logic)
 
-## DAY 3
+## DAY 5
 **Complete Pipelined RISC-V CPU Micro-architecture**
 + [Pipelining the CPU](#pipelining-the-cpu)
 + [Solutions to Pipeline Hazards](#solutions-to-pipeline-hazards)
-+ [Load/Store Instructions and Completing RISC-V CPU](#load/store-instructions-and-completing-risc-v-cpu)
++ [Load & Store Instructions and Completing RISC-V CPU](#load-&-store-instructions-and-completing-risc-v-cpu)
++ [Wrap ip](#wrap-up)
 
 # Day-1
 ## Combinational Logic in TL-Verilog using Makerchip
@@ -79,6 +83,8 @@ assign f = sel[0] ? a : (sel[1] ? b : (sel[2] ? c : d)) ;
 
 <details>
 <summary> Makerchip Platform </summary>
+
+Makerchip is a free online environment by Redwood EDA for developing high-quality integrated circuits. The online platform can be used to code, compile, simulate and debug Verilog designs from a browser. It gives you a place to create any digital sequential logic you can dream up faster than you ever thought was possible, all within your browser. 
 
 + Go to http://makerchip.com/
 + Click `IDE`
@@ -667,6 +673,10 @@ Fig 4.
 <details>
 <summary> Micro-architecture of Single Cycle RISC-V CPU </summary>
 
+<p align="center">
+  <img width="478" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/bd9a659c-7260-498c-a2bc-55b696c42f92">
+</p>
+
 </details>
 
 ## Fetch and Decode
@@ -703,6 +713,12 @@ Fig 4.
 
 + Lab for PC
 
+Program Counter is a register that contains the address of the next instruction to be executed. It is a pointer into the instruction memory, for the instruction that we are going to execute next. Since the memory is byte addressable and each instruction length is 32 bits, the Program Counter adder adds 4 bytes to the address to point to the next address.
+
+For the initial state, before fetching the first ever instruction, there is a presence of a reset signal that will reset the PC value to 0.
+
+For branch instructions, we will have immediate instructions, for which we have to add an offset value to the PC. So for branch instructions, NextPC = Incremented PC + Offset value.
+
 ```v
 |cpu
       @0
@@ -718,7 +734,9 @@ Fig 4.
   Fig 2.
 </p>
 
-+ Lab for Insstruction Fetch Logic
++ Lab for Instruction Fetch Logic
+
+Here the instruction memory is added to the program. In the Instruction Fetch logic, the instructions are fetched from the instruction memory amd passed to the Decode logic for computation. The instruction memory read address pointer is computed from the program counter and it outputs a 32 bit instruction. (instr[31:0]) . In our case, the Makerchip shell provides us an instantiation to the instruction memory, which contains a test program to compute the sum of numbers from 1 to 9.
 
 ```v
 |cpu
@@ -739,6 +757,7 @@ Fig 4.
 |cpu
       m4+imem(@1)    // Args: (read stage)
       m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+cpu_viz(@4)    // For visualisation
 ```
 
 <p align="center">
@@ -750,6 +769,14 @@ Fig 4.
 </p>
 
 + Lab for Instruction Decode
+
+In the Instruction Decode logic, all the instructions are decoded for the type of instruction, immediate instructions and the field type instructions. The opcode values are translated into instructions, and all the bit values are interpreted as per defined in the RISC-V ISA.
+
+At first, the Instruction type is decoded using 5 bits of the instruction instr[6:2]. The lower two bits from [1:0] are always equal to '11' for Base integer instructions.
+Next we calculate the 32 bit immediate value (imm[31:0]) based on the instruction type.
+Other instruction fields like funct7, rs2, rs1, funct3, rd and opcode are extracted from the 32-bit instruction based on the instruction type. We collect all the bit values of funct7, funct3, opcode, rs2, rs1 and rd into a single vector and then decode the type of instruction. At this point valid condtions need to be defined for fields like rs1, rs2, funct3 and funct7 because they are unique to only certain instruction types.
+
+Only 8 operations are implemented at this stage namely BEQ, BNE, BLT, BGE, BLTU, BGEU, ADDI and ADD. The other operations from the RV32I Base Instruction Set will be implemented in the later steps.
 
 <p align="center">
   <img width="515" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/3382ad8a-c171-4511-acfc-750e92559fef">
@@ -801,10 +828,11 @@ Fig 4.
 |cpu
       m4+imem(@1)    // Args: (read stage)
       m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+cpu_viz(@4)    // For visualisation
 ```
 <p align="center">
   <img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/c2759d98-9eee-457e-8114-6b7fbf1079a6">
-<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/03f41240-b9c3-4235-ac98-8a1fea97e651">
+<img width="935" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/a5f607f3-6ff2-4686-90a3-dd12bf03103b">
 </p>
 <p align="center">
   Fig 5.
@@ -863,6 +891,7 @@ Fig 4.
 |cpu
       m4+imem(@1)    // Args: (read stage)
       m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+cpu_viz(@4)    // For visualisation
 ```
 
 <p align="center">
@@ -942,6 +971,7 @@ Fig 4.
 |cpu
       m4+imem(@1)    // Args: (read stage)
       m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+cpu_viz(@4)    // For visualisation
 ```
 
 <p align="center">
@@ -959,6 +989,10 @@ Fig 4.
 <summary> Labs </summary>
 
 + Lab for Register File
+
+Most of the instructions are arithmetic instructions or other instructions operating on the source registers. We do regitser file read of these source registers. The register file is provided in the shell to us by the macro instantiation //m4+rf (@1, @1) , which can be viewed under the "NAV-TLV" tab on Makerchip. This macro provides us with a register file that defines the interface signals. The register file of the CPU is capable of performing 2 reads in one cycle, of the source operands, and 1 write per cycle of the desination register.
+
+The two source register fields defined as rs1 and rs2 are fed as inputs to the register file and the outputs are the contents of the source registers. The respective enable bits are set based on the valid conditions for rs1 and rs2 as defined in the previous step. Here, since we are accessing two register files at the same time, hence it is callled as 2-port register file.
 
 ```v
 |cpu
@@ -1051,6 +1085,8 @@ Fig 4.
 </p>
 
 + Lab for ALU Operations (add/addi)
+
+The Arithmetic Logic Unit is the component that computes the result based on the selected operation. The ALU operates on the contents of the two registers coming out of the register file. It performs the respective arithmetic operation on the two registers, and finally the result of the ALU is written back to the memory using the register file write port. At this point, the code only supports ADD and ADDI operations to execute the test code. All operations will be added at a later step.
 
 ```v
 |cpu
@@ -1147,6 +1183,9 @@ Fig 4.
 
 + Lab for Register File Write
 
+This step is essential to provide support for instructions that have a destination register (rd) where the output must be stored. The result of the ALU is written back to the memory using the register_file_write port. The register_file_write_enable depends on the validity of the destination register "rd" . The register_file_write_index then takes the value stored in destination register, rd and loads it into the memory in the location as pointed by the register_file_write_index. Since, in RISC-V architecture, x0 register is a hardwired register, whic is always equal to zero, hence it must be made sure that no write operartion is performed on the x0 register. For this, an additional condition to ignore write operation, if the destinaton register is x0 , has been also added.
+
+
 ```v
 |cpu
       @0
@@ -1241,6 +1280,8 @@ Fig 4.
 </p>
 
 + Lab for Branch Instructions
+
+In RISC-V ISA, branches are conditional in nature, which means based on a particular condtion, a specific branch is being taken. Moreover, a branch target pc has to be computed and based on the branch taken value, the pc will choose the new branch target pc when required.
 
 ```v
 |cpu
@@ -1346,8 +1387,11 @@ Fig 4.
 
 + Lab for Testbench
 
-Add `*passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);`
-check log for passed message.
+ - Now that the implementation is complete, a simple testbench statement can be added to ensure whether the core is working correctly or not. The "passed" and "failed" signals are used to communicate with the Makerchip platform to control the simulation. It tells the platform whther the simulation passed without any errors, failed with a list of errors that can be inferred from the log files, and hence to stop the simulation, if failed.
+
+ - When the following line of code as mentioned below is added on Makerchip, the simulation will pass only if the value stored in r10 = sum of numbers from 1 to 9.
+ - Add `*passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);`
+ - Check log for passed message.
 
 <p align="center">
   <img width="593" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/8b740a4b-0dc0-4a65-8f08-e11de4a02eee">
@@ -2152,9 +2196,13 @@ A control flow hazard, also known as a control hazard or branch hazard, occurs i
 
 </details>
 
-## Load/Store Instructions and Completing RISC-V CPU
+## Load & Store Instructions and Completing RISC-V CPU
 <details>
 <summary> Introduction </summary>
+
+<p align="center">
+  <img width="490" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/506f0676-de3e-48ab-b153-571a66ed9ef2">
+</p>
 
 </details>
 
@@ -2320,7 +2368,7 @@ A control flow hazard, also known as a control hazard or branch hazard, occurs i
   Fig 1.
 </p>
 
-+ Lab to Data From Memory to Register File
++ Lab to Load Data From Memory to Register File
 
 ```v
 |cpu
@@ -2669,8 +2717,8 @@ Fig 2.
    m4_asm(ADDI, r13, r13, 1)            // Increment intermediate register by 1
    m4_asm(BLT, r13, r12, 1111111111000) // If a3 is less than a2, branch to label named <loop>
    m4_asm(ADD, r10, r14, r0)            // Store final result to register a0 so that it can be read by main program
-   m4_asm(SW r0, r10, 100)
-   m4_asm(LW r15, r0, 100)
+   m4_asm(SW, r0, r10, 10000)           // Store the final result value to byte address 16
+   m4_asm(LW, r17, r0, 10000)           // Load the final result value from adress 16 to x17
 ```
 
 + Lab for Jump Instructions
@@ -2850,6 +2898,29 @@ Fig 2.
 </p>
 <p align="center">
   Fig 4.
+</p>
+
+</details>
+
+## Wrap up
+<details>
+<summary> Final RISC-V CPU Core Implementation </summary>
+
+<p align="center">
+<img width="958" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/0b67a8e2-7b0d-4590-bf9e-b658a725a558">
+  <img width="244" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/b5167c47-af15-4327-a644-3eb62f0dff77">
+</p>
+<p align="center">
+Fig 1.
+</p>
+
++ The code required for the RISC-V Core written in TL-Verilog and System Verilog can be compared by selecting the "Show Verilog" on the makerchip platform under the "E" tab. Upon visualization, a significant code reduction can be seen in the comparision chart.
+
+<p align="center">
+<img width="960" alt="image" src="https://github.com/Veda1809/RISCV_based_myth/assets/142098395/ad025e35-30f6-44c9-ae96-abee7947f4e4">
+</p>
+<p align="center">
+Fig 2.
 </p>
 
 </details>
